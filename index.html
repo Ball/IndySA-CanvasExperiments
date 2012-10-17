@@ -1,0 +1,163 @@
+<!doctype HTML>
+<html>
+ <title>Canvas Experiments</title>
+ <script  src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+ <script  src="lib/rx.js"></script>
+ <script  src="lib/rx.jquery.js"></script>
+ <style>
+ #preview-bar{
+	 width: 250;
+     float:left;
+ }
+ .token-def {
+	 border-style: solid;
+	 border-width: medium;
+	 border-color: gray;
+	 background-color: lightgray;
+	 padding: 3;
+	 
+ }
+ </style>
+<head>
+</head>
+<body>
+
+<div id="preview-bar">
+<canvas id="preview-pane" width="200" height="200"></canvas>
+<div><input type="text" id="token-name"/></div>
+<div>
+	<button id="cancel-button" class="preview-button">Cancel</button>
+	<button id="save-button" class="preview-button">Save</button>
+</div>
+<ul id="token-list">
+</ul>
+</div>
+
+<canvas id="game-board" width="500" height="400">
+</canvas>
+
+<script lang="JavaScript">
+var previewToken = {};
+var availableTokens = [];
+function drawToken(context, location, token){
+    var previewGradient = context.createLinearGradient(0,0,110,200);
+    previewGradient.addColorStop(0, "#988");
+    previewGradient.addColorStop(.37, "#444");
+    previewGradient.addColorStop(.4, "B99");
+    previewGradient.addColorStop(.42, "B99");
+    previewGradient.addColorStop(.44, "FFF");
+    previewGradient.addColorStop(.45, "#B99");
+    previewGradient.addColorStop(.48, "#644");
+    previewGradient.addColorStop(.8, "#644");
+    previewGradient.addColorStop(.83, "B99");
+    previewGradient.addColorStop(.82, "B99");
+    previewGradient.addColorStop(.84, "FFF");
+    previewGradient.addColorStop(.85, "#B99");
+    previewGradient.addColorStop(.88, "#644");
+    
+	context.scale(location.width / 200, location.height / 200);
+	context.translate(location.offsetX, location.offsetY);
+	
+    context.strokeStyle = "#999";
+    context.lineWidth = 5;
+    context.fillStyle = previewGradient;
+	context.beginPath();
+	context.arc(100, 100, 95, 0, Math.PI*2, false);
+	context.stroke();
+	context.fill();
+	context.globalCompositeOperation = 'destination-out';
+	context.fillStyle = "#F00";
+	context.beginPath();
+	context.arc(100, 100, 75, 0, Math.PI*2, false);
+	context.fill();
+	context.closePath();
+	
+	context.globalCompositeOperation = 'source-over';
+	if(token.img === undefined){
+		context.fillStyle = "#666";
+		context.textAlign = 'center';
+		context.textBaseline = 'center';
+		context.font = '15px Verdana';
+		context.fillText("Drop Picture Here!", 100, 100);
+	} else {
+	    context.beginPath();
+	    context.arc(100, 100, 75, 0, Math.PI*2, false);
+	    context.clip();
+	    context.drawImage(token.img, 0, 0, 200, 200);	
+	}
+	context.fillStyle = "#000";
+	context.strokeStyle = "#000";
+}
+function dragEnter(evt) {
+  evt.stopPropagation();
+  evt.preventDefault();
+}
+function dragExit(evt){
+	evt.stopPropagation();
+	evt.preventDefault();
+}
+function dragOver(evt){
+	evt.stopPropagation();
+	evt.preventDefault();
+}
+function drop(evt){
+	evt.stopPropagation();
+	evt.preventDefault();
+	var files = evt.dataTransfer.files;
+	var count = files.length;
+	if(count > 0){
+		var file = files[0];
+		var reader = new FileReader();
+		reader.onload = function (evt){
+		    previewToken.img = document.createElement('img');
+		    previewToken.img.src = evt.target.result;
+			drawPreviewToken();
+		};
+		reader.readAsDataURL(file);
+	}
+}
+function drawPreviewToken(){
+  var context = $('#preview-pane')[0].getContext('2d');
+  context.fillStyle = '#FFF';
+  context.fillRect(0,0,200,200);
+  drawToken(context,
+            {offsetX: 0, offsetY:0, width: 200, height: 200},
+            previewToken);
+}
+function addToTokenList(newToken){
+    availableTokens.push(newToken);
+    var tokenDef = $('<li class="token-def">' + newToken.name + '</li>');
+    tokenDef.click(function(e){
+	    console.log("Pick the token ", newToken.name);
+    });
+	$('#token-list').append(tokenDef);
+}
+$(document).ready(function(){
+  drawPreviewToken();
+  $('#preview-pane')[0].addEventListener('dragenter', dragEnter, false);
+  $('#preview-pane')[0].addEventListener('dragexit', dragExit, false);
+  $('#preview-pane')[0].addEventListener('dragover', dragOver, false);
+  $('#preview-pane')[0].addEventListener('drop', drop, false);
+  $('#cancel-button').click(function(){
+  	previewToken = {};
+  	$('#token-name')[0].value = '';
+  	drawPreviewToken();
+  });
+  $('#save-button').click(function(){
+      if( previewToken.img === undefined
+          || "" == $('#token-name')[0].value){
+	      return;
+      }
+      previewToken.name = $('#token-name')[0].value;
+	  addToTokenList(previewToken);
+	  previewToken = {};
+	  drawPreviewToken();
+	  $('#token-name').each(function(i,e){e.value = '';});
+  });
+  $('#token-list').onAsObservable('mousedown', '.token-def').select(function(e){
+	  console.log("add a token called " + e.value);
+  });
+});
+</script>
+</body>
+</html>
