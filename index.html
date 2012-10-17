@@ -39,7 +39,9 @@
 <script lang="JavaScript">
 var previewToken = {};
 var availableTokens = [];
+var tokensInPlay = [];
 function drawToken(context, location, token){
+    context.save();
     var previewGradient = context.createLinearGradient(0,0,110,200);
     previewGradient.addColorStop(0, "#988");
     previewGradient.addColorStop(.37, "#444");
@@ -56,7 +58,7 @@ function drawToken(context, location, token){
     previewGradient.addColorStop(.88, "#644");
     
 	context.scale(location.width / 200, location.height / 200);
-	context.translate(location.offsetX, location.offsetY);
+	context.translate(location.offsetX * 200 / location.width, location.offsetY * 200 / location.height);
 	
     context.strokeStyle = "#999";
     context.lineWidth = 5;
@@ -85,8 +87,7 @@ function drawToken(context, location, token){
 	    context.clip();
 	    context.drawImage(token.img, 0, 0, 200, 200);	
 	}
-	context.fillStyle = "#000";
-	context.strokeStyle = "#000";
+	context.restore();
 }
 function dragEnter(evt) {
   evt.stopPropagation();
@@ -124,13 +125,50 @@ function drawPreviewToken(){
             {offsetX: 0, offsetY:0, width: 200, height: 200},
             previewToken);
 }
+function drawBoard(){
+	var context = $('#game-board')[0].getContext('2d');
+	context.fillStyle = "#CCC";
+	context.lineWidth=1;
+	context.strokeStyle="#999";
+	context.fillRect(0,0,500, 400);
+	for(var i=0 ; i <= 400; i+= 50){
+		context.moveTo(0,i);
+		context.lineTo(500,i);
+	}
+	for(var i=0; i <= 500; i+= 50){
+		context.moveTo(i,0);
+		context.lineTo(i, 400);
+	}
+	context.stroke();
+	tokensInPlay.forEach(function(e){
+		drawToken(context, {offsetX: e.x*50, offsetY:e.y*50, width: 50, height: 50}, e);
+	});
+}
 function addToTokenList(newToken){
-    availableTokens.push(newToken);
-    var tokenDef = $('<li class="token-def">' + newToken.name + '</li>');
+	availableTokens.push(newToken);
+    var tokenDef = $('<a href="#">' + newToken.name + '</li>');
     tokenDef.click(function(e){
-	    console.log("Pick the token ", newToken.name);
+	    
+	    var nextPosition = function(){
+		    for(var x = 0; x < 10; x++){
+			    for(var y = 0; y < 8 ; y++){
+			    	var full = false;
+			    	for(var i=0; i < tokensInPlay.length; i++){				    	if(x == tokensInPlay[i].x && y == tokensInPlay[i].y){
+					    	full = true;
+				    	}
+			    	}
+			    	if(!full){
+				    	return {x: x, y: y};
+			    	}
+			    }
+		    }
+	    }();
+        var inPlay = $.extend(nextPosition, newToken);
+        tokensInPlay.push($.extend(nextPosition, newToken));
+   		
+        drawBoard();
     });
-	$('#token-list').append(tokenDef);
+	$('#token-list').append($('<li class="token-def"></li>').append(tokenDef));
 }
 $(document).ready(function(){
   drawPreviewToken();
@@ -154,9 +192,12 @@ $(document).ready(function(){
 	  drawPreviewToken();
 	  $('#token-name').each(function(i,e){e.value = '';});
   });
-  $('#token-list').onAsObservable('mousedown', '.token-def').select(function(e){
+  drawBoard();
+  /*
+$('#token-list').onAsObservable('mousedown', '.token-def').select(function(e){
 	  console.log("add a token called " + e.value);
   });
+*/
 });
 </script>
 </body>
