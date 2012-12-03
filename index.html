@@ -37,57 +37,84 @@
 </canvas>
 
 <script lang="JavaScript">
+
 var previewToken = {};
 var availableTokens = [];
 var tokensInPlay = [];
+
+function drawBoard(){
+	var context = $('#game-board')[0].getContext('2d');
+	context.fillStyle = "#CCC";
+	context.lineWidth=1;
+	context.strokeStyle="#999";
+	context.fillRect(0,0,500, 400);
+	
+	for(var i=0 ; i <= 400; i+= 50){
+		context.moveTo(0,i);
+		context.lineTo(500,i);
+	}
+	for(var i=0; i <= 500; i+= 50){
+		context.moveTo(i,0);
+		context.lineTo(i, 400);
+	}
+	context.stroke();
+	
+	tokensInPlay.forEach(function(e){
+		drawToken(context, {offsetX: e.x*50, offsetY:e.y*50, width: 50, height: 50}, e);
+	});
+}
+
 function drawToken(context, location, token){
     context.save();
-    var previewGradient = context.createLinearGradient(0,0,110,200);
-    previewGradient.addColorStop(0, "#988");
-    previewGradient.addColorStop(.37, "#444");
-    previewGradient.addColorStop(.4, "B99");
-    previewGradient.addColorStop(.42, "B99");
-    previewGradient.addColorStop(.44, "FFF");
-    previewGradient.addColorStop(.45, "#B99");
-    previewGradient.addColorStop(.48, "#644");
-    previewGradient.addColorStop(.8, "#644");
-    previewGradient.addColorStop(.83, "B99");
-    previewGradient.addColorStop(.82, "B99");
-    previewGradient.addColorStop(.84, "FFF");
-    previewGradient.addColorStop(.85, "#B99");
-    previewGradient.addColorStop(.88, "#644");
+    var tokenRingGradient = context.createLinearGradient(0,0,110,200);
+    tokenRingGradient.addColorStop(0, "#988");
+    tokenRingGradient.addColorStop(.37, "#444");
+    tokenRingGradient.addColorStop(.4, "B99");
+    tokenRingGradient.addColorStop(.42, "B99");
+    tokenRingGradient.addColorStop(.44, "FFF");
+    tokenRingGradient.addColorStop(.45, "#B99");
+    tokenRingGradient.addColorStop(.48, "#644");
+    tokenRingGradient.addColorStop(.8, "#644");
+    tokenRingGradient.addColorStop(.83, "B99");
+    tokenRingGradient.addColorStop(.82, "B99");
+    tokenRingGradient.addColorStop(.84, "FFF");
+    tokenRingGradient.addColorStop(.85, "#B99");
+    tokenRingGradient.addColorStop(.88, "#644");
     
-	context.scale(location.width / 200, location.height / 200);
-	context.translate(location.offsetX * 200 / location.width, location.offsetY * 200 / location.height);
+    context.scale(location.width / 200, location.height / 200);
+    context.translate(location.offsetX * 200 / location.width,
+                      location.offsetY * 200 / location.height);
 	
     context.strokeStyle = "#999";
     context.lineWidth = 5;
-    context.fillStyle = previewGradient;
-	context.beginPath();
-	context.arc(100, 100, 95, 0, Math.PI*2, false);
-	context.stroke();
-	context.fill();
-	context.globalCompositeOperation = 'destination-out';
-	context.fillStyle = "#F00";
-	context.beginPath();
-	context.arc(100, 100, 75, 0, Math.PI*2, false);
-	context.fill();
-	context.closePath();
-	
-	context.globalCompositeOperation = 'source-over';
-	if(token.img === undefined){
-		context.fillStyle = "#666";
-		context.textAlign = 'center';
-		context.textBaseline = 'center';
-		context.font = '15px Verdana';
-		context.fillText("Drop Picture Here!", 100, 100);
-	} else {
-	    context.beginPath();
-	    context.arc(100, 100, 75, 0, Math.PI*2, false);
-	    context.clip();
-	    context.drawImage(token.img, 0, 0, 200, 200);	
-	}
-	context.restore();
+    context.fillStyle = tokenRingGradient;
+    context.beginPath();
+    context.arc(100, 100, 95, 0, Math.PI*2, false);
+    context.stroke();
+    context.fill();
+
+    context.globalCompositeOperation = 'destination-out';
+    context.fillStyle = "#F00";
+    context.beginPath();
+    context.arc(100, 100, 75, 0, Math.PI*2, false);
+    context.fill();
+    context.closePath();
+    
+    context.globalCompositeOperation = 'source-over';
+
+    if(token.img === undefined){
+    	context.fillStyle = "#666";
+    	context.textAlign = 'center';
+    	context.textBaseline = 'center';
+    	context.font = '15px Verdana';
+    	context.fillText("Drop Picture Here!", 100, 100);
+    } else {
+        context.beginPath();
+        context.arc(100, 100, 75, 0, Math.PI*2, false);
+        context.clip();
+        context.drawImage(token.img, 0, 0, 200, 200);	
+    }
+    context.restore();
 }
 function dragEnter(evt) {
   evt.stopPropagation();
@@ -112,7 +139,7 @@ function drop(evt){
 		reader.onload = function (evt){
 		    previewToken.img = document.createElement('img');
 		    previewToken.img.src = evt.target.result;
-			drawPreviewToken();
+		    drawPreviewToken();
 		};
 		reader.readAsDataURL(file);
 	}
@@ -125,25 +152,6 @@ function drawPreviewToken(){
             {offsetX: 0, offsetY:0, width: 200, height: 200},
             previewToken);
 }
-function drawBoard(){
-	var context = $('#game-board')[0].getContext('2d');
-	context.fillStyle = "#CCC";
-	context.lineWidth=1;
-	context.strokeStyle="#999";
-	context.fillRect(0,0,500, 400);
-	for(var i=0 ; i <= 400; i+= 50){
-		context.moveTo(0,i);
-		context.lineTo(500,i);
-	}
-	for(var i=0; i <= 500; i+= 50){
-		context.moveTo(i,0);
-		context.lineTo(i, 400);
-	}
-	context.stroke();
-	tokensInPlay.forEach(function(e){
-		drawToken(context, {offsetX: e.x*50, offsetY:e.y*50, width: 50, height: 50}, e);
-	});
-}
 function addToTokenList(newToken){
 	availableTokens.push(newToken);
     var tokenDef = $('<a href="#">' + newToken.name + '</li>');
@@ -153,7 +161,8 @@ function addToTokenList(newToken){
 		    for(var x = 0; x < 10; x++){
 			    for(var y = 0; y < 8 ; y++){
 			    	var full = false;
-			    	for(var i=0; i < tokensInPlay.length; i++){				    	if(x == tokensInPlay[i].x && y == tokensInPlay[i].y){
+			    	for(var i=0; i < tokensInPlay.length; i++){
+			 			if(x == tokensInPlay[i].x && y == tokensInPlay[i].y){
 					    	full = true;
 				    	}
 			    	}
